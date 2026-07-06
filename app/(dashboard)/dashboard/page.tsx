@@ -62,6 +62,16 @@ export default async function DashboardPage() {
   const today = todayCheckin as DailyCheckin | null;
   const rec = recommendation as AIRecommendation | null;
 
+  let feedbackSubmitted = false;
+  if (rec) {
+    const { data: feedback } = await supabase
+      .from("recommendation_feedback")
+      .select("id")
+      .eq("recommendation_id", rec.id)
+      .maybeSingle();
+    feedbackSubmitted = !!feedback;
+  }
+
   return (
     <div className="space-y-6">
       <header className="space-y-1">
@@ -76,7 +86,11 @@ export default async function DashboardPage() {
 
       <CampusZone context={campusContext} campusName={business.campus_name} />
       <HealthZone todayCheckin={today} recentCheckins={checkins} />
-      <PriorityZone todayCheckin={!!today} recommendation={rec} />
+      <PriorityZone
+        todayCheckin={!!today}
+        recommendation={rec}
+        feedbackSubmitted={feedbackSubmitted}
+      />
       <TrendZone recentCheckins={checkins} />
 
       {today && (

@@ -7,17 +7,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AcknowledgeButton } from "@/components/dashboard/acknowledge-button";
+import { FeedbackButton } from "@/components/dashboard/feedback-button";
 import type { AIRecommendation } from "@/types/database";
 
 interface PriorityZoneProps {
   todayCheckin: boolean;
   recommendation: AIRecommendation | null;
+  feedbackSubmitted: boolean;
 }
 
 export function PriorityZone({
   todayCheckin,
   recommendation,
+  feedbackSubmitted,
 }: PriorityZoneProps) {
   return (
     <Card className="border-primary/20">
@@ -66,9 +68,9 @@ export function PriorityZone({
                 </div>
               )}
             </div>
-            <AcknowledgeButton
+            <FeedbackButton
               recommendationId={recommendation.id}
-              acknowledged={!!recommendation.acknowledged_at}
+              feedbackSubmitted={feedbackSubmitted}
             />
           </>
         ) : null}

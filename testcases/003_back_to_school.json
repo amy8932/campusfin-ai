@@ -1,0 +1,91 @@
+{
+  "campus_context": {
+    "campus_name": "北京某高校",
+    "campus_moment": "back_to_school",
+    "campus_moment_label": "开学季",
+    "events_today": [
+      {
+        "title": "开学季",
+        "event_type": "season",
+        "traffic_impact": "high"
+      }
+    ],
+    "events_upcoming_7d": [],
+    "traffic_forecast": "high",
+    "weather_signal": null,
+    "campus_headline": "开学季新生报到，校园周边客流上升"
+  },
+  "business_health": {
+    "health_label": "normal",
+    "revenue_today": 1100,
+    "revenue_change_pct_vs_last_week": 8,
+    "customer_count_today": 95,
+    "customer_change_pct_vs_7d_avg": 10,
+    "cash_flow_signal": "healthy",
+    "days_since_last_checkin": 0
+  },
+  "business_goal": {
+    "goal": "increase_revenue",
+    "goal_label": "提升营业额"
+  },
+  "daily_checkin": {
+    "checkin_date": "2026-09-01",
+    "revenue": 1100,
+    "customer_count": 95,
+    "note": null
+  },
+  "recent_trend": {
+    "checkins_last_7d": [
+      {
+        "date": "2026-08-26",
+        "revenue": 980,
+        "customer_count": 82
+      },
+      {
+        "date": "2026-08-27",
+        "revenue": 990,
+        "customer_count": 84
+      },
+      {
+        "date": "2026-08-28",
+        "revenue": 1000,
+        "customer_count": 86
+      },
+      {
+        "date": "2026-08-29",
+        "revenue": 1020,
+        "customer_count": 88
+      },
+      {
+        "date": "2026-08-30",
+        "revenue": 1050,
+        "customer_count": 90
+      },
+      {
+        "date": "2026-08-31",
+        "revenue": 1080,
+        "customer_count": 92
+      },
+      {
+        "date": "2026-09-01",
+        "revenue": 1100,
+        "customer_count": 95
+      }
+    ],
+    "revenue_7d_total": 7220,
+    "revenue_trend_direction": "up",
+    "best_weekdays": [
+      "friday",
+      "saturday",
+      "monday"
+    ],
+    "checkin_streak_days": 6,
+    "missing_days_last_7": 0
+  },
+  "recommendation_memory": {
+    "last_recommendation": null,
+    "last_7_days": [],
+    "repeat_count": 0,
+    "last_feedback": null
+  }
+}

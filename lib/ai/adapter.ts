@@ -1,14 +1,17 @@
 import { buildPromptInput, type PromptInput } from "@/lib/ai/input-builder";
 import { generateRecommendation, isLlmEnabled, LlmError } from "@/lib/ai/llm";
+import { loadRecommendationMemory } from "@/lib/ai/memory";
 import { PROMPT_VERSION } from "@/lib/ai/prompts";
 import { generateRuleBasedRecommendation } from "@/lib/ai/rule-based";
 import { ValidationError, validateRecommendationOutput } from "@/lib/ai/validator";
 import { buildCampusContext } from "@/lib/campus/context";
 import { createClient } from "@/lib/supabase/server";
 import type {
+  ActionType,
   Business,
   CampusEvent,
   DailyCheckin,
+  ConfidenceLevel,
   RecommendationSource,
 } from "@/types/database";
 
@@ -24,16 +27,8 @@ interface StoredRecommendation {
   recommendation_title: string;
   reason: string;
   expected_impact: string | null;
-  confidence_level: "high" | "medium" | "low";
-  action_type:
-    | "extend_hours"
-    | "adjust_staffing"
-    | "run_promotion"
-    | "prepare_inventory"
-    | "improve_service"
-    | "reduce_costs"
-    | "capture_traffic"
-    | "other";
+  confidence_level: ConfidenceLevel;
+  action_type: ActionType;
   fallback_message: string | null;
   source: RecommendationSource;
   input_snapshot: Record<string, unknown>;
@@ -123,12 +118,18 @@ export async function generateTodayRecommendation(
     input.todayStr
   );
 
+  const recommendationMemory = await loadRecommendationMemory(
+    input.business.id,
+    input.todayStr
+  );
+
   const promptInput = buildPromptInput({
     business: input.business,
     campusContext,
     todayCheckin: input.todayCheckin,
     recentCheckins: input.recentCheckins,
     todayStr: input.todayStr,
+    recommendationMemory,
   });
 
   if (!isLlmEnabled() || shouldSkipLlm(input.todayCheckin)) {

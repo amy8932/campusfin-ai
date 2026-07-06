@@ -5,18 +5,24 @@ import type { ActionType, ConfidenceLevel } from "@/types/database";
 const ACTION_TYPES: ActionType[] = [
   "extend_hours",
   "adjust_staffing",
-  "run_promotion",
   "prepare_inventory",
+  "reduce_inventory",
+  "run_promotion",
+  "capture_traffic",
   "improve_service",
   "reduce_costs",
-  "capture_traffic",
+  "highlight_signature_product",
+  "adjust_menu",
+  "optimize_queue",
+  "push_takeaway",
+  "increase_display",
   "other",
 ];
 
 const CONFIDENCE_LEVELS: ConfidenceLevel[] = ["high", "medium", "low"];
 
 const ACTION_VERBS =
-  /^(延长|推出|减少|增设|准备|主推|调整|优化|开展|设置|增加|控制|加强|临时|今日|考试周|论文季|增设|推出|备足|加快|压缩|精简|切换)/;
+  /^(延长|推出|减少|增设|准备|主推|调整|优化|开展|设置|增加|控制|加强|临时|提前|集中|缩短|备足|加快|压缩|精简|切换|突出|加大|摆放)/;
 
 const LONG_TERM_PATTERNS =
   /装修|招人|招聘|长期|租约|改造|重装|加盟|贷款|融资|投资|税务|法律|忠诚计划|会员体系搭建/;
@@ -75,6 +81,19 @@ function assertChineseText(field: string, value: string): void {
   }
   if (!/[\u4e00-\u9fff]/.test(value)) {
     throw new ValidationError(`Field "${field}" must contain Chinese text.`);
+  }
+}
+
+function countChineseCharacters(value: string): number {
+  return (value.match(/[\u4e00-\u9fff]/g) ?? []).length;
+}
+
+function assertTitleLength(title: string): void {
+  const count = countChineseCharacters(title);
+  if (count < 8 || count > 20) {
+    throw new ValidationError(
+      "recommendation_title must be 8–20 Chinese characters."
+    );
   }
 }
 
@@ -199,6 +218,7 @@ export function validateRecommendationOutput(
     }
   }
 
+  assertTitleLength(title);
   assertActionVerb(title);
   assertThirtyMinuteRule(title, reason);
   assertOwnerControl(title, reason);

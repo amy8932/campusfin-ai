@@ -4,6 +4,16 @@ export { generateTodayRecommendation } from "@/lib/ai/adapter";
 export { buildPromptInput } from "@/lib/ai/input-builder";
 export type { PromptInput } from "@/lib/ai/input-builder";
 export {
+  buildRecommendationMemory,
+  emptyRecommendationMemory,
+  loadRecommendationMemory,
+} from "@/lib/ai/memory";
+export type {
+  MemoryFeedback,
+  MemoryRecommendationEntry,
+  RecommendationMemory,
+} from "@/lib/ai/memory";
+export {
   generateRecommendation,
   getLlmConfig,
   isLlmConfigured,

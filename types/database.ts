@@ -29,14 +29,22 @@ export type ConfidenceLevel = "high" | "medium" | "low";
 export type ActionType =
   | "extend_hours"
   | "adjust_staffing"
-  | "run_promotion"
   | "prepare_inventory"
+  | "reduce_inventory"
+  | "run_promotion"
+  | "capture_traffic"
   | "improve_service"
   | "reduce_costs"
-  | "capture_traffic"
+  | "highlight_signature_product"
+  | "adjust_menu"
+  | "optimize_queue"
+  | "push_takeaway"
+  | "increase_display"
   | "other";
 
 export type RecommendationSource = "ai" | "rule_based";
+
+export type FeedbackHelpfulness = "good" | "neutral" | "bad";
 
 export interface Profile {
   id: string;
@@ -95,6 +103,17 @@ export interface AIRecommendation {
   source: RecommendationSource;
   acknowledged_at: string | null;
   input_snapshot: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface RecommendationFeedback {
+  id: string;
+  recommendation_id: string;
+  business_id: string;
+  feedback_date: string;
+  executed: boolean;
+  helpfulness: FeedbackHelpfulness | null;
+  optional_note: string | null;
   created_at: string;
 }
 
@@ -165,6 +184,14 @@ export interface Database {
         };
         Update: Partial<AIRecommendation>;
       };
+      recommendation_feedback: {
+        Row: RecommendationFeedback;
+        Insert: Omit<RecommendationFeedback, "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<RecommendationFeedback>;
+      };
       weekly_briefs: {
         Row: WeeklyBrief;
         Insert: Omit<WeeklyBrief, "id" | "created_at"> & {
@@ -200,6 +227,7 @@ export interface Database {
       confidence_level: ConfidenceLevel;
       action_type: ActionType;
       recommendation_source: RecommendationSource;
+      feedback_helpfulness: FeedbackHelpfulness;
     };
   };
 }

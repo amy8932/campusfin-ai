@@ -1,0 +1,85 @@
+{
+  "campus_context": {
+    "campus_name": "北京某高校",
+    "campus_moment": null,
+    "campus_moment_label": null,
+    "events_today": [],
+    "events_upcoming_7d": [],
+    "traffic_forecast": "normal",
+    "weather_signal": null,
+    "campus_headline": "北京某高校本周节奏平稳，客流预计正常"
+  },
+  "business_health": {
+    "health_label": "needs_attention",
+    "revenue_today": 680,
+    "revenue_change_pct_vs_last_week": -20,
+    "customer_count_today": 38,
+    "customer_change_pct_vs_7d_avg": -18,
+    "cash_flow_signal": "tight",
+    "days_since_last_checkin": 0
+  },
+  "business_goal": {
+    "goal": "improve_cash_flow",
+    "goal_label": "改善现金流"
+  },
+  "daily_checkin": {
+    "checkin_date": "2026-07-06",
+    "revenue": 680,
+    "customer_count": 38,
+    "note": null
+  },
+  "recent_trend": {
+    "checkins_last_7d": [
+      {
+        "date": "2026-06-30",
+        "revenue": 900,
+        "customer_count": 50
+      },
+      {
+        "date": "2026-07-01",
+        "revenue": 860,
+        "customer_count": 48
+      },
+      {
+        "date": "2026-07-02",
+        "revenue": 820,
+        "customer_count": 45
+      },
+      {
+        "date": "2026-07-03",
+        "revenue": 780,
+        "customer_count": 42
+      },
+      {
+        "date": "2026-07-04",
+        "revenue": 740,
+        "customer_count": 40
+      },
+      {
+        "date": "2026-07-05",
+        "revenue": 710,
+        "customer_count": 39
+      },
+      {
+        "date": "2026-07-06",
+        "revenue": 680,
+        "customer_count": 38
+      }
+    ],
+    "revenue_7d_total": 5490,
+    "revenue_trend_direction": "down",
+    "best_weekdays": [
+      "monday",
+      "tuesday",
+      "wednesday"
+    ],
+    "checkin_streak_days": 4,
+    "missing_days_last_7": 1
+  },
+  "recommendation_memory": {
+    "last_recommendation": null,
+    "last_7_days": [],
+    "repeat_count": 0,
+    "last_feedback": null
+  }
+}

@@ -1062,7 +1062,7 @@ Define the AI architecture for CampusFin AI — identity, mission, thinking fram
 | **System Prompt v1** | `lib/ai/prompts.ts` → `SYSTEM_PROMPT` | ✅ Created |
 | **Developer Prompt v1** | `lib/ai/prompts.ts` → `DEVELOPER_PROMPT` | ✅ Created |
 | **Few-shot examples (×3)** | `lib/ai/prompts.ts` → `FEW_SHOT_EXAMPLES` | ✅ Created |
-| **Prompt version** | `PROMPT_VERSION = "campusfin-daily-v1"` | ✅ Set |
+| **Prompt version** | `PROMPT_VERSION = "campusfin-daily-v5"` | ✅ Updated (Developer Prompt v5) |
 
 ## Prompt assembly (for Sprint 5b)
 
@@ -1116,3 +1116,89 @@ messages = [
 ## Next step
 
 **Sprint 5b:** Input Builder + Output Validator + LLM Adapter (no Dashboard changes).
+
+---
+
+# Sprint 6b Implementation Note — Owner Feedback in Prompts
+
+## System Prompt additions
+
+- Owner feedback (`recommendation_memory.last_feedback`) is a **gradual learning signal**.
+- Repeated ignored action types → avoid recommending again (unless campus/health strongly justify).
+- Consistently executed + helpful → prefer similar operational recommendations.
+- **One feedback ≠ preference** — do not overfit after a single rating.
+
+## PromptInput extension
+
+```json
+{
+  "last_recommendation": { "title", "action_type", "date", "age_days", "executed" },
+  "last_feedback": { "executed": true, "helpfulness": "good" },
+  "last_7_days": [],
+  "repeat_count": 0
+}
+```
+
+Feedback is loaded from `recommendation_feedback` for prior days only — not injected into the same-day generation flow.
+
+---
+
+# Sprint 6b.1 — Operating Coach System Prompt v2
+
+## What changed
+
+| Item | Detail |
+|------|--------|
+| **PROMPT_VERSION** | `campusfin-daily-v1` → `campusfin-daily-v2` |
+| **Identity** | Operating coach / experienced campus store manager — not consultant or ChatGPT |
+| **Thinking order** | 6 steps: Campus → Health → Goal → Memory → Feedback → Action |
+| **Decision priority** | Traffic → Cash flow → Operations → Satisfaction → Promotion (last) |
+| **Language** | Forbidden words: 建议/考虑/可以/或许/尝试/赋能/抓手/ROI/KPI |
+| **Reason format** | Sentence 1 campus; Sentence 2 data + goal |
+| **Few-shots** | Updated to match v2 reason + expected_impact style |
+
+---
+
+# Sprint 6b.2 — Developer Prompt v3 + action_type expansion
+
+## DEVELOPER_PROMPT
+
+Strict JSON-only output; no markdown; no explanations; one recommendation.
+
+## New action_type values
+
+`reduce_inventory`, `highlight_signature_product`, `adjust_menu`, `optimize_queue`, `push_takeaway`, `increase_display`
+
+## Validator
+
+- Title: 8–20 Chinese characters, verb-led
+- `action_type` enum aligned with DEVELOPER_PROMPT
+
+Migration: `supabase/migrations/20260706153000_action_type_expansion.sql`
+
+---
+
+# Sprint 6b.3 — System Prompt v4 (Operating Coach)
+
+## Key updates
+
+| Area | Change |
+|------|--------|
+| **Identity** | Practical decision assistant; optimize TODAY only |
+| **Thinking order** | WHY / WHETHER / WHAT NOT TO REPEAT / WHAT OWNER ACCEPTS |
+| **Decision priority** | 6 levels — revenue before promotion; ops before both |
+| **Constraints** | No actions depending on weather changing, university decisions, external approval |
+| **Personality** | One shop owner talking to another — not chatbot/consultant/report |
+| **Golden Rules** | Expanded to 10 rules including no fabrication |
+
+---
+
+# Sprint 6b.4 — Developer Prompt v5
+
+## Key updates
+
+- Explicit ban on analysis output (JSON only)
+- `fallback_message` listed as required field, always null
+- Field rules: title 8–20 chars verb-led; reason 2 sentences; impact quantifiable + operational
+- Never fabricate: customer counts, traffic trends (in addition to events/metrics)
+- Explicit bans: waiting, long-term planning, digital transformation, financing, hiring

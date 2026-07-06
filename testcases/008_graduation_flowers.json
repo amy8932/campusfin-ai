@@ -1,0 +1,91 @@
+{
+  "campus_context": {
+    "campus_name": "北京某高校",
+    "campus_moment": "graduation_season",
+    "campus_moment_label": "毕业季",
+    "events_today": [
+      {
+        "title": "毕业典礼周",
+        "event_type": "season",
+        "traffic_impact": "high"
+      }
+    ],
+    "events_upcoming_7d": [],
+    "traffic_forecast": "high",
+    "weather_signal": null,
+    "campus_headline": "毕业季鲜花需求集中，校园周边订单增加"
+  },
+  "business_health": {
+    "health_label": "strong_day",
+    "revenue_today": 1800,
+    "revenue_change_pct_vs_last_week": 35,
+    "customer_count_today": 42,
+    "customer_change_pct_vs_7d_avg": 28,
+    "cash_flow_signal": "healthy",
+    "days_since_last_checkin": 0
+  },
+  "business_goal": {
+    "goal": "increase_revenue",
+    "goal_label": "提升营业额"
+  },
+  "daily_checkin": {
+    "checkin_date": "2026-06-15",
+    "revenue": 1800,
+    "customer_count": 42,
+    "note": null
+  },
+  "recent_trend": {
+    "checkins_last_7d": [
+      {
+        "date": "2026-06-09",
+        "revenue": 1200,
+        "customer_count": 30
+      },
+      {
+        "date": "2026-06-10",
+        "revenue": 1300,
+        "customer_count": 32
+      },
+      {
+        "date": "2026-06-11",
+        "revenue": 1400,
+        "customer_count": 34
+      },
+      {
+        "date": "2026-06-12",
+        "revenue": 1500,
+        "customer_count": 36
+      },
+      {
+        "date": "2026-06-13",
+        "revenue": 1600,
+        "customer_count": 38
+      },
+      {
+        "date": "2026-06-14",
+        "revenue": 1700,
+        "customer_count": 40
+      },
+      {
+        "date": "2026-06-15",
+        "revenue": 1800,
+        "customer_count": 42
+      }
+    ],
+    "revenue_7d_total": 10500,
+    "revenue_trend_direction": "up",
+    "best_weekdays": [
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "checkin_streak_days": 7,
+    "missing_days_last_7": 0
+  },
+  "recommendation_memory": {
+    "last_recommendation": null,
+    "last_7_days": [],
+    "repeat_count": 0,
+    "last_feedback": null
+  }
+}

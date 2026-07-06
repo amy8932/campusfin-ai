@@ -1,4 +1,6 @@
 import type { CampusContext } from "@/lib/campus/context";
+import type { RecommendationMemory } from "@/lib/ai/memory";
+import { emptyRecommendationMemory } from "@/lib/ai/memory";
 import {
   average,
   BUSINESS_GOAL_LABELS,
@@ -63,6 +65,7 @@ export interface PromptInput {
     checkin_streak_days: number;
     missing_days_last_7: number;
   };
+  recommendation_memory: RecommendationMemory;
 }
 
 const MOMENT_SLUGS: Record<string, string> = {
@@ -179,9 +182,16 @@ export function buildPromptInput(input: {
   todayCheckin: DailyCheckin;
   recentCheckins: DailyCheckin[];
   todayStr: string;
+  recommendationMemory?: RecommendationMemory;
 }): PromptInput {
-  const { business, campusContext, todayCheckin, recentCheckins, todayStr } =
-    input;
+  const {
+    business,
+    campusContext,
+    todayCheckin,
+    recentCheckins,
+    todayStr,
+    recommendationMemory = emptyRecommendationMemory(),
+  } = input;
 
   const sortedRecent = [...recentCheckins].sort((a, b) =>
     b.checkin_date.localeCompare(a.checkin_date)
@@ -265,5 +275,6 @@ export function buildPromptInput(input: {
       checkin_streak_days: computeStreak(recentCheckins, todayStr),
       missing_days_last_7: computeMissingDays(recentCheckins, todayStr),
     },
+    recommendation_memory: recommendationMemory,
   };
 }

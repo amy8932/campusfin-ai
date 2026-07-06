@@ -643,3 +643,82 @@ When provider is OpenRouter, requests include:
 - LLM success → `source = ai`; failure → `source = rule_based`
 - No API keys in logs
 - Env values are trimmed on read (`ENABLE_LLM`, keys, model, base URL) to avoid Vercel copy-paste whitespace false negatives
+
+---
+
+# Sprint 6a Implementation Note — Recommendation Memory
+
+## What changed
+
+| Item | Location |
+|------|----------|
+| **Memory loader** | `lib/ai/memory.ts` — reads last 7 `ai_recommendations` before today |
+| **PromptInput extension** | `recommendation_memory` on `PromptInput` via `input-builder.ts` |
+| **Adapter wiring** | `loadRecommendationMemory()` called before `buildPromptInput()` |
+| **Prompt rules** | System/Developer prompts — avoid duplicate actions; continuity across days |
+
+## `recommendation_memory` schema
+
+```json
+{
+  "last_recommendation": {
+    "title": "string",
+    "action_type": "extend_hours | ...",
+    "date": "YYYY-MM-DD",
+    "age_days": 1,
+    "executed": true | null
+  },
+  "last_7_days": [ "...same shape..." ],
+  "repeat_count": 2
+}
+```
+
+- `age_days` — days between recommendation date and today
+- `executed` — `true` if owner acknowledged (`acknowledged_at` set); else `null`
+- `repeat_count` — how many times the most recent `action_type` appears in `last_7_days`
+
+## Memory principles
+
+- AI reads yesterday + last 7 days before generating today's action
+- Avoid repeating identical recommendations unless campus + health strongly justify
+- Recommendations should feel continuous Day 1 → Day 2 → Day 3
+
+## Unchanged
+
+- Dashboard, DB schema, Validator, rule-based fallback
+
+---
+
+# Sprint 6b Implementation Note — Owner Feedback Loop
+
+## What changed
+
+| Item | Location |
+|------|----------|
+| **`recommendation_feedback` table** | `supabase/migrations/20260706150000_sprint6b_recommendation_feedback.sql` |
+| **Server action** | `lib/actions/feedback.ts` → `submitRecommendationFeedback()` |
+| **Dashboard Zone 3** | `FeedbackButton` — 已执行 / 以后再说 + helpfulness modal |
+| **Memory** | `last_feedback` on `recommendation_memory` |
+| **Prompts** | Owner feedback learning rules (gradual, not one-shot) |
+
+## Feedback flow
+
+```
+Today's Priority
+  → ✓ 已执行 → modal (👍/😐/👎 + optional note) → recommendation_feedback
+  → 以后再说 → executed: false, helpfulness: null
+  → UI: ✓ 已记录 (no full page refresh)
+```
+
+## `last_feedback` in PromptInput
+
+```json
+{
+  "last_feedback": {
+    "executed": true,
+    "helpfulness": "good"
+  }
+}
+```
+
+Loaded from `recommendation_feedback` for the most recent prior recommendation. Feedback is **not** injected into today's generation — only past days feed memory.

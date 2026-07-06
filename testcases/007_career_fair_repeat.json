@@ -1,0 +1,92 @@
+{
+  "campus_context": {
+    "campus_name": "北京某高校",
+    "campus_moment": null,
+    "campus_moment_label": null,
+    "events_today": [],
+    "events_upcoming_7d": [
+      {
+        "title": "校园招聘会",
+        "event_type": "career",
+        "traffic_impact": "high",
+        "starts_on": "2026-07-08"
+      }
+    ],
+    "traffic_forecast": "high",
+    "weather_signal": null,
+    "campus_headline": "即将举行校园招聘会，北京某高校周边客流预计上升"
+  },
+  "business_health": {
+    "health_label": "normal",
+    "revenue_today": 750,
+    "revenue_change_pct_vs_last_week": 3,
+    "customer_count_today": 55,
+    "customer_change_pct_vs_7d_avg": 2,
+    "cash_flow_signal": "healthy",
+    "days_since_last_checkin": 0
+  },
+  "business_goal": {
+    "goal": "improve_repeat_rate",
+    "goal_label": "提高复购率"
+  },
+  "daily_checkin": {
+    "checkin_date": "2026-07-06",
+    "revenue": 750,
+    "customer_count": 55,
+    "note": null
+  },
+  "recent_trend": {
+    "checkins_last_7d": [
+      {
+        "date": "2026-06-30",
+        "revenue": 720,
+        "customer_count": 52
+      },
+      {
+        "date": "2026-07-01",
+        "revenue": 730,
+        "customer_count": 53
+      },
+      {
+        "date": "2026-07-02",
+        "revenue": 740,
+        "customer_count": 54
+      },
+      {
+        "date": "2026-07-03",
+        "revenue": 735,
+        "customer_count": 53
+      },
+      {
+        "date": "2026-07-04",
+        "revenue": 745,
+        "customer_count": 54
+      },
+      {
+        "date": "2026-07-05",
+        "revenue": 748,
+        "customer_count": 55
+      },
+      {
+        "date": "2026-07-06",
+        "revenue": 750,
+        "customer_count": 55
+      }
+    ],
+    "revenue_7d_total": 5168,
+    "revenue_trend_direction": "up",
+    "best_weekdays": [
+      "thursday",
+      "friday",
+      "saturday"
+    ],
+    "checkin_streak_days": 5,
+    "missing_days_last_7": 0
+  },
+  "recommendation_memory": {
+    "last_recommendation": null,
+    "last_7_days": [],
+    "repeat_count": 0,
+    "last_feedback": null
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "campus_context": {
+    "campus_name": "北京某高校",
+    "campus_moment": "thesis_season",
+    "campus_moment_label": "论文季",
+    "events_today": [
+      {
+        "title": "毕业论文提交截止周",
+        "event_type": "academic",
+        "traffic_impact": "high"
+      }
+    ],
+    "events_upcoming_7d": [],
+    "traffic_forecast": "high",
+    "weather_signal": null,
+    "campus_headline": "论文季打印需求集中，高峰客流持续"
+  },
+  "business_health": {
+    "health_label": "strong_day",
+    "revenue_today": 1450,
+    "revenue_change_pct_vs_last_week": 22,
+    "customer_count_today": 89,
+    "customer_change_pct_vs_7d_avg": 18,
+    "cash_flow_signal": "healthy",
+    "days_since_last_checkin": 0
+  },
+  "business_goal": {
+    "goal": "improve_satisfaction",
+    "goal_label": "提升用户评价"
+  },
+  "daily_checkin": {
+    "checkin_date": "2026-05-20",
+    "revenue": 1450,
+    "customer_count": 89,
+    "note": null
+  },
+  "recent_trend": {
+    "checkins_last_7d": [
+      {
+        "date": "2026-05-14",
+        "revenue": 1100,
+        "customer_count": 68
+      },
+      {
+        "date": "2026-05-15",
+        "revenue": 1180,
+        "customer_count": 72
+      },
+      {
+        "date": "2026-05-16",
+        "revenue": 1250,
+        "customer_count": 76
+      },
+      {
+        "date": "2026-05-17",
+        "revenue": 1300,
+        "customer_count": 80
+      },
+      {
+        "date": "2026-05-18",
+        "revenue": 1350,
+        "customer_count": 83
+      },
+      {
+        "date": "2026-05-19",
+        "revenue": 1400,
+        "customer_count": 86
+      },
+      {
+        "date": "2026-05-20",
+        "revenue": 1450,
+        "customer_count": 89
+      }
+    ],
+    "revenue_7d_total": 9030,
+    "revenue_trend_direction": "up",
+    "best_weekdays": [
+      "tuesday",
+      "wednesday",
+      "thursday"
+    ],
+    "checkin_streak_days": 6,
+    "missing_days_last_7": 0
+  },
+  "recommendation_memory": {
+    "last_recommendation": null,
+    "last_7_days": [],
+    "repeat_count": 0,
+    "last_feedback": null
+  }
+}
