@@ -642,3 +642,4 @@ When provider is OpenRouter, requests include:
 - 8s timeout; errors throw → adapter retries once → rule-based fallback
 - LLM success → `source = ai`; failure → `source = rule_based`
 - No API keys in logs
+- Env values are trimmed on read (`ENABLE_LLM`, keys, model, base URL) to avoid Vercel copy-paste whitespace false negatives

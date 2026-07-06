@@ -31,29 +31,52 @@ export class LlmError extends Error {
 }
 
 function resolveApiKey(): string | undefined {
-  return process.env.LLM_API_KEY || process.env.OPENAI_API_KEY;
+  const key =
+    process.env.LLM_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim();
+  return key || undefined;
 }
 
 function resolveModel(): string {
   return (
-    process.env.LLM_MODEL ||
-    process.env.OPENAI_MODEL ||
+    process.env.LLM_MODEL?.trim() ||
+    process.env.OPENAI_MODEL?.trim() ||
     DEFAULT_MODEL
   );
 }
 
+function resolveProvider(): string {
+  return (process.env.LLM_PROVIDER || "openai").trim().toLowerCase();
+}
+
 function resolveBaseUrl(): string {
-  if (process.env.LLM_BASE_URL) {
-    return process.env.LLM_BASE_URL.replace(/\/$/, "");
+  const baseUrl = process.env.LLM_BASE_URL?.trim();
+  if (baseUrl) {
+    return baseUrl.replace(/\/$/, "");
   }
-  if (process.env.LLM_PROVIDER === "openrouter") {
+  if (resolveProvider() === "openrouter") {
     return OPENROUTER_BASE_URL;
   }
   return OPENAI_BASE_URL;
 }
 
-function resolveProvider(): string {
-  return process.env.LLM_PROVIDER || "openai";
+export function logLlmConfigDebug(): void {
+  console.info("[CampusFin AI Config]", {
+    enableLlmRaw: process.env.ENABLE_LLM,
+    enabled: isLlmEnabledInternal(),
+    configured: isLlmConfigured(),
+    provider: resolveProvider(),
+    model: resolveModel(),
+    baseUrl: resolveBaseUrl(),
+    hasLlmApiKey: Boolean(process.env.LLM_API_KEY),
+    hasOpenAiApiKey: Boolean(process.env.OPENAI_API_KEY),
+  });
+}
+
+function isLlmEnabledInternal(): boolean {
+  return (
+    process.env.ENABLE_LLM?.trim().toLowerCase() === "true" &&
+    isLlmConfigured()
+  );
 }
 
 /** Resolved LLM config from env — never includes logging of apiKey. */
@@ -74,7 +97,8 @@ export function isLlmConfigured(): boolean {
 }
 
 export function isLlmEnabled(): boolean {
-  return process.env.ENABLE_LLM === "true" && isLlmConfigured();
+  logLlmConfigDebug();
+  return isLlmEnabledInternal();
 }
 
 function buildMessages(
@@ -114,7 +138,7 @@ function buildRequestHeaders(config: LlmConfig): Record<string, string> {
 
   if (config.provider === "openrouter" || config.baseUrl.includes("openrouter.ai")) {
     headers["HTTP-Referer"] =
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
     headers["X-Title"] = "CampusFin AI";
   }
 
