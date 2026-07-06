@@ -133,11 +133,22 @@ export async function generateTodayRecommendation(
 
   if (!isLlmEnabled() || shouldSkipLlm(input.todayCheckin)) {
     const ruleRec = buildRuleBasedRecommendation(input, promptInput);
+    const skippedZeroCheckin =
+      isLlmEnabled() && shouldSkipLlm(input.todayCheckin);
+    ruleRec.input_snapshot = {
+      ...ruleRec.input_snapshot,
+      llm_attempted: false,
+      fallback_reason: skippedZeroCheckin
+        ? "skipped_zero_checkin"
+        : "feature_flag_off",
+    };
     logRecommendationEvent({
       promptVersion: PROMPT_VERSION,
       source: "rule_based",
       retryCount: 0,
-      validationResult: isLlmEnabled() ? "skipped_zero_checkin" : "feature_flag_off",
+      validationResult: skippedZeroCheckin
+        ? "skipped_zero_checkin"
+        : "feature_flag_off",
     });
     await saveRecommendation(input.business.id, input.todayStr, ruleRec);
     return;
@@ -145,6 +156,8 @@ export async function generateTodayRecommendation(
 
   let retryCount = 0;
   let lastValidationError: string | null = null;
+  let fallbackReason: string | null = null;
+  let lastRawLlmOutput: string | null = null;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const start = Date.now();
@@ -153,6 +166,7 @@ export async function generateTodayRecommendation(
         promptInput,
         attempt > 0 ? lastValidationError : null
       );
+      lastRawLlmOutput = raw;
       const llmDurationMs = Date.now() - start;
       const validated = validateRecommendationOutput(raw, promptInput);
 
@@ -180,26 +194,30 @@ export async function generateTodayRecommendation(
       const llmDurationMs = Date.now() - start;
 
       if (error instanceof ValidationError) {
+        fallbackReason = `validation_failed: ${error.message}`;
         lastValidationError = error.message;
         retryCount = attempt + 1;
         logRecommendationEvent({
           promptVersion: PROMPT_VERSION,
           source: "ai",
           retryCount,
-          validationResult: `validation_failed: ${error.message}`,
+          validationResult: fallbackReason,
           llmDurationMs,
         });
         continue;
+      }
+
+      if (error instanceof LlmError) {
+        fallbackReason = `llm_error: ${error.message}`;
+      } else {
+        fallbackReason = "unknown_error";
       }
 
       logRecommendationEvent({
         promptVersion: PROMPT_VERSION,
         source: "ai",
         retryCount,
-        validationResult:
-          error instanceof LlmError
-            ? `llm_error: ${error.message}`
-            : "unknown_error",
+        validationResult: fallbackReason,
         llmDurationMs,
       });
       break;
@@ -207,6 +225,13 @@ export async function generateTodayRecommendation(
   }
 
   const ruleRec = buildRuleBasedRecommendation(input, promptInput);
+  ruleRec.input_snapshot = {
+    ...ruleRec.input_snapshot,
+    fallback_reason: fallbackReason,
+    last_raw_llm_output: lastRawLlmOutput,
+    retry_count: retryCount,
+    llm_attempted: true,
+  };
   logRecommendationEvent({
     promptVersion: PROMPT_VERSION,
     source: "rule_based",
