@@ -596,3 +596,49 @@ AI engine v1 **only** processes:
 ---
 
 **Sprint 4 — Rule-based engine live. LLM + Weekly Brief deferred.**
+
+---
+
+# Sprint 5b.1 Implementation Note
+
+## What changed
+
+| Item | Status |
+|------|--------|
+| **OpenAI-compatible provider adapter** | ✅ `lib/ai/llm.ts` uses fetch to `{baseUrl}/chat/completions` |
+| **OpenRouter support** | ✅ Default recommended provider for CN dev |
+| **OpenAI official API** | ✅ Still compatible via env fallback |
+| **Dashboard / DB / fallback** | ✅ Unchanged |
+
+## Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `ENABLE_LLM` | `true` to enable LLM path; `false` → rule-based only |
+| `LLM_PROVIDER` | e.g. `openrouter` — selects default base URL when `LLM_BASE_URL` unset |
+| `LLM_API_KEY` | Primary API key (preferred over `OPENAI_API_KEY`) |
+| `LLM_MODEL` | Primary model (preferred over `OPENAI_MODEL`); default `openai/gpt-4o-mini` |
+| `LLM_BASE_URL` | API base; default `https://openrouter.ai/api/v1` when provider is openrouter |
+| `OPENAI_API_KEY` | Legacy fallback key |
+| `OPENAI_MODEL` | Legacy fallback model |
+
+## Resolution priority
+
+1. API key: `LLM_API_KEY` → `OPENAI_API_KEY`
+2. Model: `LLM_MODEL` → `OPENAI_MODEL` → `openai/gpt-4o-mini`
+3. Base URL: `LLM_BASE_URL` → openrouter default if `LLM_PROVIDER=openrouter` → `https://api.openai.com/v1`
+
+## OpenRouter headers
+
+When provider is OpenRouter, requests include:
+
+- `Authorization: Bearer {key}`
+- `HTTP-Referer: {NEXT_PUBLIC_SITE_URL}`
+- `X-Title: CampusFin AI`
+
+## Unchanged behavior
+
+- `generateRecommendation(input)` public interface unchanged
+- 8s timeout; errors throw → adapter retries once → rule-based fallback
+- LLM success → `source = ai`; failure → `source = rule_based`
+- No API keys in logs

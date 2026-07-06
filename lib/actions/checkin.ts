@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { generateRuleBasedRecommendation } from "@/lib/ai/rule-based";
-import { buildCampusContext } from "@/lib/campus/context";
+import { generateTodayRecommendation } from "@/lib/ai/adapter";
 import { getBusinessDateString } from "@/lib/timezone";
 import type {
   Business,
@@ -86,60 +85,30 @@ export async function submitDailyCheckin(
     return { error: checkinError?.message ?? "Failed to save check-in." };
   }
 
-  await generateAndStoreRecommendation(business, checkin, checkinDate);
+  const [{ data: events }, { data: recentCheckins }] = await Promise.all([
+    supabase
+      .from("campus_events")
+      .select("*")
+      .eq("campus_name", business.campus_name),
+    supabase
+      .from("daily_checkins")
+      .select("*")
+      .eq("business_id", business.id)
+      .order("checkin_date", { ascending: false })
+      .limit(7),
+  ]);
+
+  await generateTodayRecommendation({
+    business,
+    todayCheckin: checkin,
+    todayStr: checkinDate,
+    campusEvents: (events ?? []) as CampusEvent[],
+    recentCheckins: (recentCheckins ?? []) as DailyCheckin[],
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/record");
   redirect("/dashboard");
-}
-
-async function generateAndStoreRecommendation(
-  business: Business,
-  todayCheckin: DailyCheckin,
-  todayStr: string
-) {
-  const supabase = await createClient();
-
-  const { data: events } = await supabase
-    .from("campus_events")
-    .select("*")
-    .eq("campus_name", business.campus_name);
-
-  const campusEvents = (events ?? []) as CampusEvent[];
-  const campusContext = buildCampusContext(
-    campusEvents,
-    business.campus_name,
-    todayStr
-  );
-
-  const recommendation = generateRuleBasedRecommendation({
-    business,
-    campusContext,
-    campusEvents,
-    todayCheckin,
-    todayStr,
-  });
-
-  const { error } = await supabase.rpc("upsert_ai_recommendation", {
-    p_business_id: business.id,
-    p_recommendation_date: todayStr,
-    p_recommendation_title: recommendation.recommendation_title,
-    p_reason: recommendation.reason,
-    p_expected_impact: recommendation.expected_impact,
-    p_confidence_level: recommendation.confidence_level,
-    p_action_type: recommendation.action_type,
-    p_fallback_message: recommendation.fallback_message,
-    p_source: recommendation.source,
-    p_input_snapshot: {
-      campus_headline: campusContext.headline,
-      revenue: todayCheckin.revenue,
-      customer_count: todayCheckin.customer_count,
-    },
-  });
-
-  if (error) {
-    console.error("Failed to store recommendation:", error.message);
-  }
 }
 
 export async function acknowledgeRecommendation(recommendationId: string) {
