@@ -1,6 +1,6 @@
 import type { ActionType, ConfidenceLevel } from "@/types/database";
 
-export const PROMPT_VERSION = "campusfin-daily-v5";
+export const PROMPT_VERSION = "campusfin-daily-v6";
 
 /** Structured LLM output for Today's Priority — matches docs/AI-ENGINE.md §6 */
 export interface DailyRecommendationOutput {
@@ -71,6 +71,26 @@ Memory explains WHAT NOT TO REPEAT.
 
 Feedback explains WHAT THE OWNER ACCEPTS.
 
+Daily check-in note explains WHAT THE OWNER SEES TODAY.
+
+---
+
+## Daily Check-in Note
+
+daily_checkin.note is an owner-provided signal. Read it after Business Goal, before Recommendation Memory.
+
+If daily_checkin.note mentions a real operational or campus signal, use it in reasoning and action selection — unless it contradicts structured campus_context.
+
+Examples:
+• note: 招聘会 → include career fair in reasoning; prefer capture_traffic or increase_display
+• note: 下雨没人来 → treat as demand drop; prefer reduce_inventory or push_takeaway
+• note: 排队太久 → prioritize optimize_queue or improve_service
+• note: 牛奶快不够 → prioritize prepare_inventory or reduce_inventory
+
+When note is present, reference it naturally in reason sentence 1 or 2 — do not quote the note verbatim unless helpful.
+
+If note is null, rely on structured data only.
+
 ---
 
 ## Campus-first Principle
@@ -105,6 +125,8 @@ Priority 6 — Run promotions.
 Promotion is NOT the default answer.
 
 Operational improvements are preferred.
+
+When daily_checkin.note contains a specific signal, let it influence action_type selection alongside campus context — e.g. 排队太久 → optimize_queue before promotion; 牛奶快不够 → prepare_inventory before extend_hours.
 
 ---
 
@@ -174,6 +196,10 @@ Never sound like ChatGPT, a consultant, or an MBA report.
 
 Avoid: 建议, 考虑, 可以, 尝试, 进一步, 长期来看, 赋能, 抓手, 数字化, ROI, KPI.
 
+Avoid generic template phrases: 有助于提升营业额, 吸引更多学生, 增加外卖宣传.
+
+Prefer concrete campus-shop wording: 覆盖晚自习后客流, 抓住招聘会散场前后30分钟, 减少雨天堂食备料, 把招牌饮品摆到门口.
+
 Never say "As an AI" or reference yourself as AI.
 
 ---
@@ -206,11 +232,23 @@ Example:
 
 ## Expected Impact
 
-Must be measurable.
+Must be measurable, realistic, and matched to action_type.
 
-Good: 预计增加80–120元营业额 / 预计减少15%浪费 / 预计缩短5分钟排队时间 / 预计增加10位晚高峰顾客
+Do NOT reuse the same expected_impact range repeatedly (e.g. avoid defaulting to 预计增加100–150元营业额 every time).
 
-Bad: 提升营业额 / 改善经营
+Match impact to action_type:
+• extend_hours → 增加晚高峰顾客 / 覆盖晚自习后客流
+• reduce_inventory → 减少损耗 / 减少备料浪费
+• optimize_queue → 缩短等待时间
+• push_takeaway → 增加外带订单
+• increase_display → 提升门口转化
+• highlight_signature_product → 提高单品转化
+• prepare_inventory → 避免高峰缺货
+• capture_traffic → 抓住散场前后客流
+
+Good: 预计覆盖晚自习后15–20位顾客 / 预计减少15%备料浪费 / 预计缩短5分钟排队 / 预计增加8–12单外带
+
+Bad: 提升营业额 / 改善经营 / 预计增加100–150元营业额 (when used as generic default)
 
 Use 预计 or 可能 — never guarantee outcomes.
 
@@ -236,6 +274,8 @@ Not a chatbot. Not a consultant. Not a report.
 8. Choose the simplest effective action.
 9. Never fabricate events or business data.
 10. If two actions are equally good, choose the easier one.
+11. Use daily_checkin.note when present — do not ignore owner signals.
+12. Vary expected_impact by action_type — no template ranges.
 
 ---
 
@@ -273,7 +313,7 @@ recommendation_title
 
 reason
 • Maximum two sentences
-• Sentence 1 explains campus context
+• Sentence 1 explains campus context (include daily_checkin.note signal when present)
 • Sentence 2 explains business health and business goal
 • No consultant language
 
@@ -281,6 +321,12 @@ expected_impact
 • Realistic
 • Quantifiable
 • Operational
+• Must match action_type — do not default to 预计增加100–150元营业额
+• Vary impact wording across recommendations
+
+daily_checkin.note
+• If present and operational, use it in reason and action_type selection
+• Do not ignore owner-provided signals
 
 confidence_level
 Must be one of: high | medium | low
@@ -365,10 +411,10 @@ export const FEW_SHOT_EXAMPLES: FewShotExample[] = [
       },
     },
     expected_output: {
-      recommendation_title: "考试周期间延长晚间营业至 9 点",
+      recommendation_title: "考试周延长晚间营业至9点",
       reason:
-        "考试周晚间客流通常增加。今天营业额已高于近7日均值15%，延长营业时间更有机会继续提升营业额。",
-      expected_impact: "预计增加80–120元营业额",
+        "考试周晚间客流通常增加。今天营业额已高于近7日均值15%，覆盖晚自习后客流能继续拉高营业额。",
+      expected_impact: "预计覆盖晚自习后15–20位顾客",
       confidence_level: "medium",
       action_type: "extend_hours",
       fallback_message: null,
@@ -409,7 +455,7 @@ export const FEW_SHOT_EXAMPLES: FewShotExample[] = [
         checkin_date: "2026-07-06",
         revenue: 1450,
         customer_count: 89,
-        note: null,
+        note: "排队太久",
       },
       recent_trend: {
         revenue_trend_direction: "up",
@@ -423,12 +469,12 @@ export const FEW_SHOT_EXAMPLES: FewShotExample[] = [
       },
     },
     expected_output: {
-      recommendation_title: "增设论文打印快速通道",
+      recommendation_title: "高峰期缩短点单等待时间",
       reason:
-        "论文季打印需求集中在提交截止周。今日客流89人接近饱和，缩短等待时间有助于提升用户评价。",
-      expected_impact: "预计缩短5分钟等待时间",
+        "论文季打印高峰客流集中。今日89位顾客排队太久，缩短等待能直接改善用户评价。",
+      expected_impact: "预计缩短5分钟排队",
       confidence_level: "high",
-      action_type: "improve_service",
+      action_type: "optimize_queue",
       fallback_message: null,
     },
   },
@@ -467,7 +513,7 @@ export const FEW_SHOT_EXAMPLES: FewShotExample[] = [
         checkin_date: "2026-07-06",
         revenue: 580,
         customer_count: 42,
-        note: null,
+        note: "下雨没人来",
       },
       recent_trend: {
         revenue_trend_direction: "down",
@@ -481,12 +527,181 @@ export const FEW_SHOT_EXAMPLES: FewShotExample[] = [
       },
     },
     expected_output: {
-      recommendation_title: "今日主推外卖套餐，减少现做备料",
+      recommendation_title: "减少堂食备料，主推外带",
       reason:
-        "雨天堂食客流通常下降。今天营业额低于上周同日18%，减少备料有助于改善现金流。",
-      expected_impact: "预计减少50–80元食材浪费",
+        "下雨没人来，堂食需求明显下滑。今天营业额低于上周同日18%，减少备料并主推外带能稳住现金流。",
+      expected_impact: "预计减少雨天堂食备料",
       confidence_level: "medium",
-      action_type: "reduce_costs",
+      action_type: "push_takeaway",
+      fallback_message: null,
+    },
+  },
+  {
+    label: "咖啡店 · 考试周+招聘会 · note招聘会",
+    input: {
+      campus_context: {
+        campus_name: "北京某高校",
+        campus_moment: "exam_week",
+        campus_moment_label: "考试周",
+        events_today: [],
+        events_upcoming_7d: [
+          {
+            title: "校园招聘会",
+            event_type: "career",
+            traffic_impact: "high",
+            starts_on: "2026-07-07",
+          },
+        ],
+        traffic_forecast: "high",
+        weather_signal: null,
+        campus_headline: "考试周叠加招聘会，白天自习晚间散场客流双高峰",
+      },
+      business_health: {
+        health_label: "strong_day",
+        revenue_today: 980,
+        revenue_change_pct_vs_last_week: 18,
+        customer_count_today: 82,
+        customer_change_pct_vs_7d_avg: 14,
+        cash_flow_signal: "healthy",
+      },
+      business_goal: {
+        goal: "increase_revenue",
+        goal_label: "提升营业额",
+      },
+      daily_checkin: {
+        checkin_date: "2026-07-07",
+        revenue: 980,
+        customer_count: 82,
+        note: "招聘会",
+      },
+      recent_trend: {
+        revenue_trend_direction: "up",
+        checkin_streak_days: 6,
+      },
+      recommendation_memory: {
+        last_recommendation: null,
+        last_feedback: null,
+        last_7_days: [],
+        repeat_count: 0,
+      },
+    },
+    expected_output: {
+      recommendation_title: "摆放招聘会快速套餐",
+      reason:
+        "老板提到招聘会在办，散场前后30分钟门口客流最集中。今天营业额已高于近7日均值，把快速套餐摆到门口能抓住路过学生。",
+      expected_impact: "预计提升门口转化8–12单",
+      confidence_level: "high",
+      action_type: "increase_display",
+      fallback_message: null,
+    },
+  },
+  {
+    label: "奶茶店 · 雨天低营收 · note下雨没人来",
+    input: {
+      campus_context: {
+        campus_name: "北京某高校",
+        campus_moment: null,
+        campus_moment_label: null,
+        events_today: [
+          {
+            title: "雨天",
+            event_type: "weather",
+            traffic_impact: "normal",
+          },
+        ],
+        events_upcoming_7d: [],
+        traffic_forecast: "low",
+        weather_signal: "rain",
+        campus_headline: "今日下雨，堂食客流预计下降",
+      },
+      business_health: {
+        health_label: "needs_attention",
+        revenue_today: 480,
+        revenue_change_pct_vs_last_week: -22,
+        customer_count_today: 28,
+        customer_change_pct_vs_7d_avg: -20,
+        cash_flow_signal: "tight",
+      },
+      business_goal: {
+        goal: "improve_cash_flow",
+        goal_label: "改善现金流",
+      },
+      daily_checkin: {
+        checkin_date: "2026-07-06",
+        revenue: 480,
+        customer_count: 28,
+        note: "下雨没人来",
+      },
+      recent_trend: {
+        revenue_trend_direction: "down",
+        checkin_streak_days: 3,
+      },
+      recommendation_memory: {
+        last_recommendation: null,
+        last_feedback: null,
+        last_7_days: [],
+        repeat_count: 0,
+      },
+    },
+    expected_output: {
+      recommendation_title: "减少堂食备料，主推外带",
+      reason:
+        "下雨没人来，堂食几乎停摆。今天营业额低于上周同日22%，先减备料再推外带套餐最稳现金流。",
+      expected_impact: "预计减少20%现做备料",
+      confidence_level: "medium",
+      action_type: "reduce_inventory",
+      fallback_message: null,
+    },
+  },
+  {
+    label: "咖啡店 · 高客流 · note排队太久",
+    input: {
+      campus_context: {
+        campus_name: "北京某高校",
+        campus_moment: "exam_week",
+        campus_moment_label: "考试周",
+        events_today: [],
+        events_upcoming_7d: [],
+        traffic_forecast: "high",
+        weather_signal: null,
+        campus_headline: "考试周自习客流持续高位",
+      },
+      business_health: {
+        health_label: "strong_day",
+        revenue_today: 1050,
+        revenue_change_pct_vs_last_week: 20,
+        customer_count_today: 95,
+        customer_change_pct_vs_7d_avg: 25,
+        cash_flow_signal: "healthy",
+      },
+      business_goal: {
+        goal: "improve_satisfaction",
+        goal_label: "提升用户评价",
+      },
+      daily_checkin: {
+        checkin_date: "2026-07-06",
+        revenue: 1050,
+        customer_count: 95,
+        note: "排队太久",
+      },
+      recent_trend: {
+        revenue_trend_direction: "up",
+        checkin_streak_days: 7,
+      },
+      recommendation_memory: {
+        last_recommendation: null,
+        last_feedback: null,
+        last_7_days: [],
+        repeat_count: 0,
+      },
+    },
+    expected_output: {
+      recommendation_title: "高峰期缩短点单等待时间",
+      reason:
+        "考试周晚高峰客流持续高位。今天95位顾客且老板反馈排队太久，先压缩点单等待比做促销见效更快。",
+      expected_impact: "预计缩短5分钟排队",
+      confidence_level: "high",
+      action_type: "optimize_queue",
       fallback_message: null,
     },
   },

@@ -1,12 +1,12 @@
 # CampusFin AI — Evaluation Report
 
-**Generated:** 2026-07-06T13:14:48.569Z
+**Generated:** 2026-07-06T14:31:46.335Z
 
 # AI Judge Summary
 
 | Metric | Value |
 |--------|-------|
-| Prompt Version | campusfin-daily-v1 |
+| Prompt Version | campusfin-daily-v6 |
 | Model | openai/gpt-4o-mini |
 | Provider | openrouter |
 | Scenario Count | 12 |
@@ -15,7 +15,7 @@
 | Judge Evaluated | 0 |
 | Judge Pass (≥12/14) | 0 |
 | Overall Pass (Validator + Judge) | 0 |
-| Average Generation Latency | 0.6s |
+| Average Generation Latency | 0.8s |
 
 ---
 ================================================
@@ -71,7 +71,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 1.3s
+- **Generation:** 1.4s
 - **Judge:** 0.0s
 
 ## Overall
@@ -130,7 +130,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.4s
+- **Generation:** 1.4s
 - **Judge:** 0.0s
 
 ## Overall
@@ -189,7 +189,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.7s
+- **Generation:** 0.4s
 - **Judge:** 0.0s
 
 ## Overall
@@ -248,7 +248,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.6s
+- **Generation:** 0.5s
 - **Judge:** 0.0s
 
 ## Overall
@@ -366,7 +366,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 1.1s
+- **Generation:** 0.4s
 - **Judge:** 0.0s
 
 ## Overall
@@ -425,7 +425,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.4s
+- **Generation:** 0.5s
 - **Judge:** 0.0s
 
 ## Overall
@@ -484,7 +484,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.4s
+- **Generation:** 0.6s
 - **Judge:** 0.0s
 
 ## Overall
@@ -602,7 +602,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.4s
+- **Generation:** 0.5s
 - **Judge:** 0.0s
 
 ## Overall
@@ -661,7 +661,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.7s
+- **Generation:** 1.4s
 - **Judge:** 0.0s
 
 ## Overall
@@ -720,7 +720,7 @@ _Skipped — validator did not pass._
 
 ## Timing
 
-- **Generation:** 0.4s
+- **Generation:** 1.1s
 - **Judge:** 0.0s
 
 ## Overall
@@ -734,7 +734,7 @@ _Skipped — validator did not pass._
 
 | Metric | Value |
 |--------|-------|
-| Prompt Version | campusfin-daily-v1 |
+| Prompt Version | campusfin-daily-v6 |
 | Model | openai/gpt-4o-mini |
 | Provider | openrouter |
 | Scenario Count | 12 |
@@ -753,18 +753,18 @@ _No judge scores available._
 
 | Scenario | Validator | Judge Score | Judge Pass | Overall | Gen Time |
 |----------|-----------|-------------|------------|---------|----------|
-| 001 | FAIL | — | SKIP | FAIL | 1.3s |
-| 002 | FAIL | — | SKIP | FAIL | 0.4s |
-| 003 | FAIL | — | SKIP | FAIL | 0.7s |
-| 004 | FAIL | — | SKIP | FAIL | 0.6s |
+| 001 | FAIL | — | SKIP | FAIL | 1.4s |
+| 002 | FAIL | — | SKIP | FAIL | 1.4s |
+| 003 | FAIL | — | SKIP | FAIL | 0.4s |
+| 004 | FAIL | — | SKIP | FAIL | 0.5s |
 | 005 | FAIL | — | SKIP | FAIL | 0.4s |
-| 006 | FAIL | — | SKIP | FAIL | 1.1s |
-| 007 | FAIL | — | SKIP | FAIL | 0.4s |
-| 008 | FAIL | — | SKIP | FAIL | 0.4s |
+| 006 | FAIL | — | SKIP | FAIL | 0.4s |
+| 007 | FAIL | — | SKIP | FAIL | 0.5s |
+| 008 | FAIL | — | SKIP | FAIL | 0.6s |
 | 009 | FAIL | — | SKIP | FAIL | 0.5s |
-| 010 | FAIL | — | SKIP | FAIL | 0.4s |
-| 011 | FAIL | — | SKIP | FAIL | 0.7s |
-| 012 | FAIL | — | SKIP | FAIL | 0.4s |
+| 010 | FAIL | — | SKIP | FAIL | 0.5s |
+| 011 | FAIL | — | SKIP | FAIL | 1.4s |
+| 012 | FAIL | — | SKIP | FAIL | 1.1s |
 
 ---
 # Prompt Optimization Suggestions
