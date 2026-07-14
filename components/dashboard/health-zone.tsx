@@ -5,73 +5,123 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
-  computeHealthLabel,
-  HEALTH_LABEL_DISPLAY,
-  type HealthLabel,
-} from "@/lib/health";
+  dashboardBodyClass,
+  dashboardCaptionClass,
+  dashboardCardClass,
+  dashboardCardTitleClass,
+  dashboardSectionClass,
+} from "@/components/dashboard/dashboard-styles";
+import {
+  buildMetricComparison,
+  findPreviousCheckin,
+  HEALTH_STATUS_DISPLAY,
+  resolveHealthStatus,
+} from "@/lib/dashboard/display";
+import { computeHealthLabel } from "@/lib/health";
 import type { DailyCheckin } from "@/types/database";
+import { cn } from "@/lib/utils";
 
 interface HealthZoneProps {
   todayCheckin: DailyCheckin | null;
   recentCheckins: DailyCheckin[];
+  todayStr: string;
 }
 
-export function HealthZone({ todayCheckin, recentCheckins }: HealthZoneProps) {
+export function HealthZone({
+  todayCheckin,
+  recentCheckins,
+  todayStr,
+}: HealthZoneProps) {
+  const previous = todayCheckin
+    ? findPreviousCheckin(recentCheckins, todayStr)
+    : null;
+
   const revenues = recentCheckins.map((c) => Number(c.revenue));
   const avgRevenue =
     revenues.length > 0
       ? revenues.reduce((a, b) => a + b, 0) / revenues.length
       : null;
 
-  const healthLabel: HealthLabel = todayCheckin
+  const healthLabel = todayCheckin
     ? computeHealthLabel(Number(todayCheckin.revenue), avgRevenue)
     : "no_data";
 
-  const healthDisplay =
-    healthLabel !== "no_data" ? HEALTH_LABEL_DISPLAY[healthLabel] : null;
+  const revenueRatio =
+    todayCheckin && avgRevenue && avgRevenue > 0
+      ? Number(todayCheckin.revenue) / avgRevenue
+      : null;
+
+  const statusLevel =
+    healthLabel !== "no_data"
+      ? resolveHealthStatus(healthLabel, revenueRatio)
+      : null;
+  const statusDisplay = statusLevel
+    ? HEALTH_STATUS_DISPLAY[statusLevel]
+    : null;
+
+  const revenueMetric = todayCheckin
+    ? buildMetricComparison(
+        Number(todayCheckin.revenue),
+        previous ? Number(previous.revenue) : null,
+        "¥"
+      )
+    : null;
+
+  const customerMetric = todayCheckin
+    ? buildMetricComparison(
+        todayCheckin.customer_count,
+        previous ? previous.customer_count : null,
+        ""
+      )
+    : null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription>Business Health / 经营状态</CardDescription>
-        <CardTitle className="text-lg">
-          {healthDisplay ? healthDisplay.zh : "暂无数据"}
-          {healthDisplay && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {healthDisplay.en}
-            </span>
-          )}
-        </CardTitle>
+    <Card className={dashboardCardClass}>
+      <CardHeader className="pb-2">
+        <CardDescription className={dashboardCaptionClass}>
+          Business Health / 经营状态
+        </CardDescription>
+        <h2 className={dashboardSectionClass}>今天经营怎么样</h2>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         {!todayCheckin ? (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Complete Daily Check-in to see today&apos;s numbers.
-              <br />
+          <div className="space-y-3">
+            <p className={`${dashboardBodyClass} text-gray-500`}>
               完成今日经营打卡后查看经营数据。
+              <span className="ml-1">Complete Daily Check-in first.</span>
             </p>
             <Button render={<Link href="/dashboard/record" />}>
               Daily Check-in / 今日经营打卡
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Metric
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MetricBlock
               label="Revenue / 营业额"
-              value={`¥${Number(todayCheckin.revenue).toLocaleString()}`}
+              metric={revenueMetric!}
             />
-            <Metric
+            <MetricBlock
               label="Customers / 客流"
-              value={String(todayCheckin.customer_count)}
+              metric={customerMetric!}
             />
-            <Metric
-              label="Health / 评分"
-              value={healthDisplay?.zh ?? "—"}
-            />
+            {statusDisplay && (
+              <div className="rounded-lg border border-border/30 px-3 py-2.5">
+                <p className={dashboardCaptionClass}>Status / 状态</p>
+                <span
+                  className={cn(
+                    "mt-1.5 inline-flex rounded-full border px-2.5 py-0.5 text-[13px] font-medium",
+                    statusDisplay.className
+                  )}
+                >
+                  {statusDisplay.zh}
+                  <span className="ml-1 font-normal opacity-80">
+                    {statusDisplay.en}
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -79,11 +129,29 @@ export function HealthZone({ todayCheckin, recentCheckins }: HealthZoneProps) {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function MetricBlock({
+  label,
+  metric,
+}: {
+  label: string;
+  metric: { value: string; delta: string | null; deltaPositive: boolean | null };
+}) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+    <div className="rounded-lg border border-border/30 px-3 py-2.5">
+      <p className={dashboardCaptionClass}>{label}</p>
+      <p className={`mt-1 ${dashboardCardTitleClass}`}>{metric.value}</p>
+      {metric.delta && (
+        <p
+          className={cn(
+            "mt-0.5 text-[13px]",
+            metric.deltaPositive === true && "text-emerald-600",
+            metric.deltaPositive === false && "text-amber-600",
+            metric.deltaPositive === null && "text-gray-500"
+          )}
+        >
+          {metric.delta}
+        </p>
+      )}
     </div>
   );
 }

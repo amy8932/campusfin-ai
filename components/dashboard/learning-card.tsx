@@ -3,8 +3,15 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
+import {
+  dashboardBodyClass,
+  dashboardCaptionClass,
+  dashboardCardClass,
+  dashboardCardTitleClass,
+  dashboardDividerClass,
+  dashboardSectionClass,
+} from "@/components/dashboard/dashboard-styles";
 import type { LearningCardData } from "@/lib/ai/learning";
 
 interface LearningCardProps {
@@ -15,31 +22,34 @@ interface LearningCardProps {
 function FeedbackSection({ feedback }: { feedback: LearningCardData["feedback"] }) {
   if (feedback.kind === "none") {
     return (
-      <p className="text-sm text-muted-foreground">暂无反馈 / No feedback yet</p>
+      <p className={`${dashboardBodyClass} text-gray-500`}>
+        告诉 CampusFin 是否有帮助，以后推荐会越来越懂你。
+      </p>
     );
   }
 
   if (feedback.kind === "not_executed") {
     return (
-      <p className="text-sm font-medium">
-        <span className="text-destructive">✗</span> 未执行 / Not executed
+      <p className={`${dashboardBodyClass} font-medium`}>
+        <span className="text-destructive">✗</span> 未执行
+        <span className="ml-1.5 font-normal text-gray-500">Not executed</span>
       </p>
     );
   }
 
   const helpfulnessLine =
     feedback.helpfulness === "good"
-      ? "👍 有帮助 / Helpful"
+      ? "👍 很有帮助"
       : feedback.helpfulness === "neutral"
-        ? "😐 一般 / Neutral"
+        ? "😐 一般"
         : feedback.helpfulness === "bad"
-          ? "👎 没帮助 / Not helpful"
+          ? "👎 没帮助"
           : null;
 
   return (
-    <div className="space-y-1 text-sm font-medium">
+    <div className={`space-y-0.5 ${dashboardBodyClass} font-medium`}>
       <p>
-        <span className="text-primary">✓</span> 已执行 / Executed
+        <span className="text-primary">✓</span> 已执行
       </p>
       {helpfulnessLine && <p>{helpfulnessLine}</p>}
     </div>
@@ -52,53 +62,73 @@ export function LearningCard({ data, visible }: LearningCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription>AI Learning / AI 学习</CardDescription>
-        <CardTitle className="text-lg">Learning timeline / 学习轨迹</CardTitle>
+    <Card className={dashboardCardClass}>
+      <CardHeader className="pb-2">
+        <CardDescription className={dashboardCaptionClass}>
+          CampusFin Learning
+        </CardDescription>
+        <h2 className={dashboardSectionClass}>CampusFin 学习</h2>
+        <p className={dashboardCaptionClass}>
+          CampusFin 正在学习你的经营方式
+        </p>
       </CardHeader>
-      <CardContent className="space-y-5">
-        <section className="space-y-1.5">
-          <h3 className="text-sm font-semibold">Yesterday / 昨天</h3>
-          <p className="text-xs text-muted-foreground">昨天建议</p>
-          <p className="text-sm leading-snug">
-            {data.yesterday.title ?? "暂无历史建议"}
+      <CardContent className="space-y-3.5 pt-0">
+        <section className="space-y-1">
+          <h3 className={dashboardCardTitleClass}>
+            Latest Recommendation
+            <span className="ml-1.5 font-normal text-gray-500">
+              最近一次建议
+            </span>
+          </h3>
+          <p className={dashboardBodyClass}>
+            {data.latest.title ?? "暂无近期建议"}
           </p>
         </section>
 
-        <div className="border-t" />
+        <div className={dashboardDividerClass} />
 
-        <section className="space-y-1.5">
-          <h3 className="text-sm font-semibold">Owner Feedback / 老板反馈</h3>
+        <section className="space-y-1">
+          <h3 className={dashboardCardTitleClass}>
+            Owner Response
+            <span className="ml-1.5 font-normal text-gray-500">你的反馈</span>
+          </h3>
           <FeedbackSection feedback={data.feedback} />
         </section>
 
-        <div className="border-t" />
+        <div className={dashboardDividerClass} />
 
-        <section className="space-y-1.5">
-          <h3 className="text-sm font-semibold">AI Learned / AI 已学习</h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+        <section className="space-y-1">
+          <h3 className={dashboardCardTitleClass}>
+            CampusFin Learned
+            <span className="ml-1.5 font-normal text-gray-500">
+              CampusFin 了解到
+            </span>
+          </h3>
+          <p className={`${dashboardBodyClass} text-gray-600`}>
             {data.learnedText}
           </p>
         </section>
 
         {data.timeline.length > 0 && (
           <>
-            <div className="border-t" />
-            <section className="space-y-2">
-              <h3 className="text-sm font-semibold">
-                Recent Learning / 近期学习
+            <div className={dashboardDividerClass} />
+            <section className="space-y-1.5">
+              <h3 className={dashboardCardTitleClass}>
+                Recent Decisions
+                <span className="ml-1.5 font-normal text-gray-500">
+                  近期建议
+                </span>
               </h3>
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {data.timeline.map((item) => (
                   <li
                     key={item.date}
-                    className="flex items-baseline gap-3 text-sm tabular-nums"
+                    className={`flex items-baseline gap-3 ${dashboardBodyClass}`}
                   >
-                    <span className="w-9 shrink-0 font-medium text-muted-foreground">
-                      {item.weekdayLabel}
+                    <span className="w-16 shrink-0 text-gray-500">
+                      {item.dateLabel}
                     </span>
-                    <span>{item.shortLabel}</span>
+                    <span>{item.actionLabel}</span>
                   </li>
                 ))}
               </ul>
@@ -106,15 +136,26 @@ export function LearningCard({ data, visible }: LearningCardProps) {
           </>
         )}
 
-        <div className="border-t" />
+        <div className={dashboardDividerClass} />
 
-        <section>
-          <p className="text-sm font-medium">
-            AI 已学习 {data.stats.historyCount} 条经营记录
+        <section className="space-y-1">
+          <h3 className={dashboardCardTitleClass}>
+            Learning Progress
+            <span className="ml-1.5 font-normal text-gray-500">学习进度</span>
+          </h3>
+          <p className={dashboardBodyClass}>
+            CampusFin has learned from{" "}
+            <span className="text-xl font-semibold tabular-nums text-foreground">
+              {data.stats.historyCount}
+            </span>{" "}
+            business decisions
           </p>
-          <p className="text-xs text-muted-foreground">
-            {data.stats.historyCount} recommendation
-            {data.stats.historyCount === 1 ? "" : "s"} in history
+          <p className={dashboardCaptionClass}>
+            已学习{" "}
+            <span className="font-semibold text-foreground">
+              {data.stats.historyCount}
+            </span>{" "}
+            次经营决策 · CampusFin 会持续学习你的经营方式。
           </p>
         </section>
       </CardContent>

@@ -4,13 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { getOwnerBusiness } from "@/lib/business";
 import { buildCampusContext } from "@/lib/campus/context";
 import { getBusinessDateString } from "@/lib/timezone";
+import { BusinessHeader } from "@/components/dashboard/business-header";
 import { CampusZone } from "@/components/dashboard/campus-zone";
 import { HealthZone } from "@/components/dashboard/health-zone";
 import { LearningCard } from "@/components/dashboard/learning-card";
 import { PriorityZone } from "@/components/dashboard/priority-zone";
 import { TrendZone } from "@/components/dashboard/trend-zone";
+import { WeeklyBriefCard } from "@/components/dashboard/weekly-brief-card";
 import { buildLearningCard } from "@/lib/ai/learning";
-import { BUSINESS_GOAL_LABELS } from "@/lib/health";
+import { generateWeeklyBrief } from "@/lib/ai/weekly-brief";
 import type {
   AIRecommendation,
   CampusEvent,
@@ -32,6 +34,7 @@ export default async function DashboardPage() {
     { data: events },
     { data: todayCheckin },
     { data: recentCheckins },
+    { data: briefCheckins },
     { data: recommendation },
     { data: historyRecommendations },
   ] = await Promise.all([
@@ -51,6 +54,12 @@ export default async function DashboardPage() {
       .eq("business_id", business.id)
       .order("checkin_date", { ascending: false })
       .limit(7),
+    supabase
+      .from("daily_checkins")
+      .select("*")
+      .eq("business_id", business.id)
+      .order("checkin_date", { ascending: false })
+      .limit(14),
     supabase
       .from("ai_recommendations")
       .select("*")
@@ -72,6 +81,7 @@ export default async function DashboardPage() {
   );
 
   const checkins = (recentCheckins ?? []) as DailyCheckin[];
+  const briefCheckinsList = (briefCheckins ?? []) as DailyCheckin[];
   const today = todayCheckin as DailyCheckin | null;
   const rec = recommendation as AIRecommendation | null;
 
@@ -110,20 +120,30 @@ export default async function DashboardPage() {
     feedbackSubmitted = !!feedback;
   }
 
-  return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <p className="text-sm text-muted-foreground">
-          {business.name} · {business.campus_name}
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight">Today / 今日</h1>
-        <p className="text-sm text-muted-foreground">
-          Goal / 经营目标：{BUSINESS_GOAL_LABELS[business.business_goal]}
-        </p>
-      </header>
+  const weeklyBrief = await generateWeeklyBrief({
+    business,
+    todayStr,
+    campusContext,
+    campusEvents,
+    checkins: briefCheckinsList,
+    recommendations: historyRecs,
+    feedbackByRecommendationId: feedbackMap,
+  });
 
-      <CampusZone context={campusContext} campusName={business.campus_name} />
-      <HealthZone todayCheckin={today} recentCheckins={checkins} />
+  return (
+    <div className="mx-auto max-w-2xl space-y-4">
+      <BusinessHeader
+        business={business}
+        todayStr={todayStr}
+        recentCheckins={checkins}
+      />
+
+      <CampusZone context={campusContext} todayStr={todayStr} />
+      <HealthZone
+        todayCheckin={today}
+        recentCheckins={checkins}
+        todayStr={todayStr}
+      />
       <PriorityZone
         todayCheckin={!!today}
         recommendation={rec}
@@ -131,11 +151,12 @@ export default async function DashboardPage() {
       />
       <LearningCard data={learningCardData} visible={!!today} />
       <TrendZone recentCheckins={checkins} />
+      <WeeklyBriefCard brief={weeklyBrief} />
 
       {today && (
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="pb-2 text-center text-[13px] text-gray-500">
           <Link href="/dashboard/record" className="underline underline-offset-4">
-            Edit today&apos;s Daily Check-in / 修改今日打卡
+            修改今日打卡 · Edit today&apos;s check-in
           </Link>
         </p>
       )}

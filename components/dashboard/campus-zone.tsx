@@ -1,65 +1,74 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
+import {
+  dashboardBodyClass,
+  dashboardCaptionClass,
+  dashboardCardClass,
+  dashboardCardTitleClass,
+  dashboardSectionClass,
+} from "@/components/dashboard/dashboard-styles";
 import type { CampusContext } from "@/lib/campus/context";
-import { TRAFFIC_LABELS } from "@/lib/campus/context";
-import type { CampusEvent } from "@/types/database";
+import {
+  buildCampusSignals,
+  buildTrafficSignal,
+} from "@/lib/campus/signals";
 
 interface CampusZoneProps {
   context: CampusContext;
-  campusName: string;
+  todayStr: string;
 }
 
-export function CampusZone({ context, campusName }: CampusZoneProps) {
+export function CampusZone({ context, todayStr }: CampusZoneProps) {
+  const signals = buildCampusSignals(context, todayStr);
+  const traffic = buildTrafficSignal(context);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription>Today&apos;s Campus / 今日校园</CardDescription>
-        <CardTitle className="text-xl font-semibold leading-snug">
-          {context.headlineZh}
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">{context.headline}</p>
+    <Card className={dashboardCardClass}>
+      <CardHeader className="pb-2">
+        <CardDescription className={dashboardCaptionClass}>
+          Today&apos;s Campus / 今日校园
+        </CardDescription>
+        <h2 className={dashboardSectionClass}>今天校园发生了什么</h2>
       </CardHeader>
-      <CardContent className="flex flex-wrap gap-2">
-        {context.campusMoment && (
-          <EventChip label={context.campusMoment} />
+      <CardContent className="space-y-3 pt-0">
+        {signals.length > 0 ? (
+          <ul className="space-y-3">
+            {signals.map((signal) => (
+              <li key={`${signal.emoji}-${signal.title}`} className="flex gap-3">
+                <span className="text-lg leading-none" aria-hidden>
+                  {signal.emoji}
+                </span>
+                <div className="min-w-0 space-y-0.5">
+                  <p className={`${dashboardCardTitleClass} text-[15px]`}>
+                    {signal.title}
+                  </p>
+                  <p className={dashboardCaptionClass}>{signal.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={dashboardBodyClass}>
+            {context.headlineZh}
+          </p>
         )}
-        {context.eventsToday
-          .filter((e) => e.event_type !== "season")
-          .map((e) => (
-            <EventChip key={e.id} label={e.title} event={e} />
-          ))}
-        {context.eventsUpcoming.slice(0, 2).map((e) => (
-          <EventChip key={`up-${e.id}`} label={`${e.title} · upcoming`} event={e} />
-        ))}
-        <EventChip
-          label={`Traffic ${TRAFFIC_LABELS[context.trafficForecast].zh}`}
-        />
-        <span className="w-full text-xs text-muted-foreground">{campusName}</span>
+
+        <div className="flex items-center justify-between rounded-lg border border-border/30 bg-muted/20 px-3 py-2">
+          <div>
+            <p className={dashboardCaptionClass}>Traffic / 客流预期</p>
+            <p className={`${dashboardCardTitleClass} text-[15px]`}>
+              {traffic.label}
+            </p>
+          </div>
+          <p className={`${dashboardBodyClass} text-gray-500`}>
+            {traffic.description}
+          </p>
+        </div>
       </CardContent>
     </Card>
-  );
-}
-
-function EventChip({
-  label,
-  event,
-}: {
-  label: string;
-  event?: CampusEvent;
-}) {
-  return (
-    <span className="inline-flex items-center rounded-md border bg-muted/50 px-2.5 py-1 text-xs font-medium">
-      {label}
-      {event?.traffic_impact === "high" && (
-        <span className="ml-1 text-muted-foreground">↑</span>
-      )}
-    </span>
   );
 }

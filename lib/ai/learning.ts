@@ -7,7 +7,7 @@ import type {
   RecommendationFeedback,
 } from "@/types/database";
 
-export interface LearningCardYesterday {
+export interface LearningCardLatest {
   title: string | null;
 }
 
@@ -19,13 +19,13 @@ export interface LearningCardFeedback {
 }
 
 export interface LearningTimelineItem {
-  weekdayLabel: string;
-  shortLabel: string;
+  dateLabel: string;
+  actionLabel: string;
   date: string;
 }
 
 export interface LearningCardData {
-  yesterday: LearningCardYesterday;
+  latest: LearningCardLatest;
   feedback: LearningCardFeedback;
   learnedText: string;
   timeline: LearningTimelineItem[];
@@ -34,20 +34,20 @@ export interface LearningCardData {
   };
 }
 
-const ACTION_SHORT_LABELS: Record<ActionType, string> = {
-  extend_hours: "延长营业",
+const ACTION_TIMELINE_LABELS: Record<ActionType, string> = {
+  extend_hours: "延长营业时间",
   adjust_staffing: "调整人手",
   prepare_inventory: "提前备料",
   reduce_inventory: "减少备货",
   run_promotion: "推广套餐",
-  capture_traffic: "抓住客流",
+  capture_traffic: "抓住校园客流",
   improve_service: "优化服务",
   reduce_costs: "控制成本",
-  highlight_signature_product: "主推招牌",
+  highlight_signature_product: "主推招牌饮品",
   adjust_menu: "调整菜单",
   optimize_queue: "优化排队",
   push_takeaway: "增加外卖",
-  increase_display: "门口展示",
+  increase_display: "加强门口展示",
   other: "经营调整",
 };
 
@@ -68,12 +68,19 @@ const ACTION_LEARNED_PHRASES: Record<ActionType, string> = {
   other: "此类经营建议",
 };
 
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-
-const LEARNING_PLACEHOLDER = "AI 正在学习你的经营习惯。";
+const LEARNING_START =
+  "CampusFin 已开始了解你的经营方式。";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function daysBetween(fromDate: string, toDate: string): number {
+  const [fy, fm, fd] = fromDate.split("-").map(Number);
+  const [ty, tm, td] = toDate.split("-").map(Number);
+  const from = Date.UTC(fy, fm - 1, fd);
+  const to = Date.UTC(ty, tm - 1, td);
+  return Math.max(0, Math.round((to - from) / 86_400_000));
 }
 
 function extractCampusPhrase(
@@ -93,10 +100,11 @@ function extractCampusPhrase(
   return null;
 }
 
-function formatWeekdayLabel(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return WEEKDAY_LABELS[day] ?? "—";
+function formatTimelineDateLabel(dateStr: string, todayStr: string): string {
+  const ageDays = daysBetween(dateStr, todayStr);
+  if (ageDays === 1) return "昨天";
+  const [, m, d] = dateStr.split("-").map(Number);
+  return `${m}月${d}日`;
 }
 
 function clampLearnedText(text: string): string {
@@ -110,11 +118,17 @@ function buildLearnedText(input: {
   lastActionType: ActionType | null;
   feedback: RecommendationFeedback | null;
   campusPhrase: string | null;
+  hasAnyHistory: boolean;
 }): string {
-  const { memoryRepeatCount, lastActionType, feedback, campusPhrase } = input;
+  const { memoryRepeatCount, lastActionType, feedback, campusPhrase, hasAnyHistory } =
+    input;
+
+  if (!hasAnyHistory) {
+    return LEARNING_START;
+  }
 
   if (!feedback) {
-    return LEARNING_PLACEHOLDER;
+    return LEARNING_START;
   }
 
   const actionPhrase = lastActionType
@@ -126,34 +140,34 @@ function buildLearnedText(input: {
     (!feedback.executed || feedback.helpfulness === "bad")
   ) {
     return clampLearnedText(
-      "你较少采用此类经营建议，未来会减少类似推荐。"
+      "你较少采用这类建议，CampusFin 会减少类似推荐。"
     );
   }
 
   if (!feedback.executed) {
-    return clampLearnedText("你暂缓了上一条建议，AI 会逐步调整推荐方向。");
+    return clampLearnedText(
+      "你暂缓了上一条建议，CampusFin 会逐步调整方向。"
+    );
   }
 
   if (feedback.helpfulness === "bad") {
     return clampLearnedText(
-      "你较少采用此类经营建议，未来会减少类似推荐。"
+      "这类建议对你帮助不大，CampusFin 会减少类似推荐。"
     );
   }
 
   if (feedback.helpfulness === "good") {
     const campus = campusPhrase ? `${campusPhrase}，` : "";
-    return clampLearnedText(
-      `${campus}你通常愿意执行${actionPhrase}。`
-    );
+    return clampLearnedText(`${campus}你更愿意执行${actionPhrase}。`);
   }
 
   if (feedback.helpfulness === "neutral") {
     return clampLearnedText(
-      `你会执行${ACTION_SHORT_LABELS[lastActionType ?? "other"]}，但感受一般，AI 会继续观察。`
+      "你会执行这类建议，但感受一般，CampusFin 会继续了解你的偏好。"
     );
   }
 
-  return LEARNING_PLACEHOLDER;
+  return LEARNING_START;
 }
 
 function toFeedbackDisplay(
@@ -188,29 +202,30 @@ export function buildLearningCard(input: {
     .filter((r) => r.recommendation_date < todayStr)
     .sort((a, b) => b.recommendation_date.localeCompare(a.recommendation_date));
 
-  const yesterdayRec = priorRecs[0] ?? null;
-  const yesterdayFeedback = yesterdayRec
-    ? feedbackByRecommendationId.get(yesterdayRec.id) ?? null
+  const latestRec = priorRecs[0] ?? null;
+  const latestFeedback = latestRec
+    ? feedbackByRecommendationId.get(latestRec.id) ?? null
     : null;
 
   const timeline = priorRecs.slice(0, 7).map((rec) => ({
-    weekdayLabel: formatWeekdayLabel(rec.recommendation_date),
-    shortLabel: ACTION_SHORT_LABELS[rec.action_type],
+    dateLabel: formatTimelineDateLabel(rec.recommendation_date, todayStr),
+    actionLabel: ACTION_TIMELINE_LABELS[rec.action_type],
     date: rec.recommendation_date,
   }));
 
   const learnedText = buildLearnedText({
     memoryRepeatCount: memory.repeat_count,
     lastActionType: memory.last_recommendation?.action_type ?? null,
-    feedback: yesterdayFeedback,
-    campusPhrase: extractCampusPhrase(yesterdayRec?.input_snapshot ?? null),
+    feedback: latestFeedback,
+    campusPhrase: extractCampusPhrase(latestRec?.input_snapshot ?? null),
+    hasAnyHistory: priorRecs.length > 0,
   });
 
   return {
-    yesterday: {
+    latest: {
       title: memory.last_recommendation?.title ?? null,
     },
-    feedback: toFeedbackDisplay(yesterdayFeedback),
+    feedback: toFeedbackDisplay(latestFeedback),
     learnedText,
     timeline,
     stats: {
@@ -218,3 +233,6 @@ export function buildLearningCard(input: {
     },
   };
 }
+
+/** @deprecated Use LearningCardLatest */
+export type LearningCardYesterday = LearningCardLatest;
